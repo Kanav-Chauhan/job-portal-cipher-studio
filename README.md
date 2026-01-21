@@ -33,8 +33,31 @@ Includes job creation, editing, duplication, deletion, analytics, image uploads,
 - Secure `.env` Database Setup  
 
 ---
-## Preview 
-![Dashboard](project_images/dashboard.png)
+# Preview
+## Dashboard
+![Dashboard](project_images/Dashboard.png)
+
+## Analytics
+![Analytics](project_images/analyse.png)
+
+## Post Job
+![Post Job](project_images/postjob.png)
+
+## Update Job
+![Update Job](project_images/update.png)
+
+## Updated Successfully
+![Updated](project_images/updated.png)
+
+## Duplicate Job
+![Duplicated](project_images/duplicated.png)
+
+## Delete Job
+![Delete](project_images/delete.png)
+
+## Deleted Successfully
+![Deleted Success](project_images/deletedsuccess.png)
+
 
 ---
 
