@@ -1,49 +1,139 @@
 <template>
-  <div class="container">
-    <h1>Job Dashboard</h1>
+  <div class="min-h-screen bg-gray-50 p-8">
+
+    <!-- Header -->
+    <h1 class="text-4xl font-bold text-gray-900 mb-6 text-center">
+      Job Dashboard
+    </h1>
 
     <!-- Top Controls -->
-    <div class="top-bar">
-      <button @click="openCreateForm">Post Job</button>
-      <button @click="showAnalytics = true">Analytics</button>
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
 
+  <!-- Left: Actions -->
+  <div class="flex gap-3">
+    <button
+      @click="openCreateForm"
+      class="flex items-center gap-2 px-5 py-2 rounded-lg
+             bg-blue-600 text-white font-semibold
+             hover:bg-blue-700
+             shadow-md hover:shadow-[0_0_20px_rgba(37,99,235,0.8)]
+             transition-all"
+    >
+      <span>➕</span>
+      Post Job
+    </button>
+
+    <button
+      @click="showAnalytics = true"
+      class="px-5 py-2 rounded-lg
+             border border-blue-600 text-blue-600 font-semibold
+             hover:bg-blue-50
+             transition"
+    >
+      Analytics
+    </button>
+  </div>
+
+  <!-- Right: Search + Filter -->
+  <div class="flex gap-3 flex-wrap">
+
+    <div class="relative">
       <input
         v-model="search"
-        placeholder="Search by job title..."
+        placeholder="Search jobs..."
+        class="pl-10 pr-4 py-2 rounded-lg border border-gray-300
+               focus:ring-2 focus:ring-blue-500 outline-none"
       />
-
-      <select v-model="filterStatus">
-        <option value="">All Status</option>
-        <option>Draft</option>
-        <option>Requested</option>
-        <option>Posted</option>
-        <option>Filled</option>
-      </select>
+      <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
     </div>
 
+    <select
+      v-model="filterStatus"
+      class="px-4 py-2 rounded-lg border border-gray-300
+             focus:ring-2 focus:ring-blue-500 outline-none
+             bg-white"
+    >
+      <option value="">All Status</option>
+      <option>Draft</option>
+      <option>Requested</option>
+      <option>Posted</option>
+      <option>Filled</option>
+    </select>
+
+  </div>
+</div>
+
+
     <!-- Loading / Empty -->
-    <div v-if="loading">Loading jobs...</div>
-    <div v-else-if="filteredJobs.length === 0">
+    <div v-if="loading" class="text-center text-gray-500">
+      Loading jobs...
+    </div>
+
+    <div v-else-if="filteredJobs.length === 0" class="text-center text-gray-500">
       No Jobs Found
     </div>
 
     <!-- Job Cards -->
-    <div class="grid">
-      <div v-for="job in filteredJobs" :key="job.id" class="card">
-        <img v-if="job.image" :src="`http://127.0.0.1:8000${job.image}`" />
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        <h3>{{ job.title }}</h3>
+      <div
+        v-for="job in filteredJobs"
+        :key="job.id"
+        class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm
+               hover:shadow-[0_0_25px_rgba(37,99,235,0.8)]
+               hover:border-blue-500 transition-all duration-300"
+      >
+        <img
+          v-if="job.image"
+          :src="`http://127.0.0.1:8000${job.image}`"
+          class="w-full h-40 object-cover rounded-lg mb-3"
+        />
 
-        <p>{{ job.city }}, {{ job.state }}</p>
-        <p>Status: {{ job.status.join(", ") }}</p>
-        <p>Category: {{ job.category.join(", ") }}</p>
+        <h3 class="text-lg font-semibold text-gray-900">
+          {{ job.title }}
+        </h3>
 
-        <div class="actions">
-          <button @click="editJob(job)">Edit</button>
-          <button @click="duplicateJob(job.id)">Duplicate</button>
-          <button @click="deleteJob(job.id)">Delete</button>
+        <p class="text-sm text-gray-600">
+          {{ job.city }}, {{ job.state }}
+        </p>
+
+        <p class="text-sm mt-2">
+          <span class="font-medium">Status:</span>
+          {{ job.status.join(", ") }}
+        </p>
+
+        <p class="text-sm">
+          <span class="font-medium">Category:</span>
+          {{ job.category.join(", ") }}
+        </p>
+
+        <div class="flex gap-2 mt-4">
+          <button
+            @click="editJob(job)"
+            class="flex-1 bg-blue-600 text-white py-1 rounded-lg
+                   hover:bg-blue-700 transition"
+          >
+            Edit
+          </button>
+
+          <button
+            @click="duplicateJob(job.id)"
+            class="flex-1 bg-green-600 text-white py-1 rounded-lg
+                   hover:bg-green-700 transition"
+          >
+            Duplicate
+          </button>
+
+          <button
+            @click="deleteJob(job.id)"
+            class="flex-1 bg-red-600 text-white py-1 rounded-lg
+                   hover:bg-red-700 transition"
+          >
+            Delete
+          </button>
         </div>
       </div>
+
     </div>
 
     <!-- Modals -->
@@ -58,6 +148,7 @@
       v-if="showAnalytics"
       @close="showAnalytics = false"
     />
+
   </div>
 </template>
 
@@ -77,7 +168,6 @@ const selectedJob = ref(null)
 const search = ref("")
 const filterStatus = ref("")
 
-// Fetch Jobs
 const fetchJobs = async () => {
   loading.value = true
   const res = await api.get("jobs/")
@@ -85,7 +175,6 @@ const fetchJobs = async () => {
   loading.value = false
 }
 
-// Filters
 const filteredJobs = computed(() => {
   return jobs.value.filter(job => {
     const matchTitle = job.title
@@ -100,7 +189,6 @@ const filteredJobs = computed(() => {
   })
 })
 
-// Actions
 const openCreateForm = () => {
   selectedJob.value = null
   showForm.value = true
@@ -130,66 +218,5 @@ const duplicateJob = async (id) => {
   jobs.value.splice(index + 1, 0, newJob)
 }
 
-
 onMounted(fetchJobs)
 </script>
-
-<style>
-.container {
-  padding: 20px;
-  max-width: 1200px;
-  margin: auto;
-}
-
-.top-bar {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.top-bar input,
-.top-bar select {
-  padding: 6px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, 260px);
-  gap: 16px;
-}
-
-.card {
-  background: white;
-  border-radius: 8px;
-  padding: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-
-.card img {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-  border-radius: 6px;
-}
-
-.actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.actions button {
-  flex: 1;
-  background: #2563eb;
-  color: white;
-  border: none;
-  padding: 6px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.actions button:last-child {
-  background: #dc2626;
-}
-</style>

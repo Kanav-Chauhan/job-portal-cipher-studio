@@ -1,74 +1,91 @@
 <template>
-  <div class="modal">
-    <div class="box">
-      <h2>{{ job ? "Edit Job" : "Create Job" }}</h2>
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 
-      <form @submit.prevent="submit">
+    <div class="frost-modal w-full max-w-xl rounded-2xl p-6 shadow-xl max-h-[90vh] flex flex-col">
+
+      <!-- Header -->
+      <h2 class="frost-title mb-4">
+        {{ job ? "Edit Job" : "Create Job" }}
+      </h2>
+
+      <!-- Scrollable Form -->
+      <form @submit.prevent="submit" class="space-y-4 overflow-y-auto pr-2 flex-1">
 
         <!-- Image Upload -->
         <div
-          class="upload-box"
+          class="frost-upload"
           @dragover.prevent
           @drop.prevent="handleDrop"
+          @click="openFile"
         >
-          <p>Drag & Drop Image or Click</p>
-          <input
-            type="file"
-            ref="fileInput"
-            hidden
-            @change="handleFile"
-          />
-          <button type="button" @click="openFile">Choose File</button>
+          <p class="text-muted">Drag & Drop Image or Click</p>
 
-          <img v-if="preview" :src="preview" class="preview" />
+          <input type="file" ref="fileInput" hidden @change="handleFile" />
+
+          <img
+            v-if="preview"
+            :src="preview"
+            class="w-full h-40 object-cover rounded-lg mt-3"
+          />
         </div>
 
         <!-- Job Title -->
-        <input
-          v-model="title"
-          placeholder="Job Title"
-          required
-        />
+        <input v-model="title" placeholder="Job Title" required class="frost-input" />
 
-        <!-- Status -->
-        <select v-model="status" multiple required>
-          <option>Draft</option>
-          <option>Requested</option>
-          <option>Posted</option>
-          <option>Filled</option>
-        </select>
+        <!-- Status (Multi-select) -->
+        <div>
+          <p class="frost-label">Status</p>
+          <div class="frost-checkbox-group">
+            <label v-for="s in ['Draft','Requested','Posted','Filled']" :key="s" class="frost-checkbox">
+              <input type="checkbox" :value="s" v-model="status" />
+              <span>{{ s }}</span>
+            </label>
+          </div>
+        </div>
 
-        <!-- Category -->
-        <select v-model="category" multiple required>
-          <option>Full-time</option>
-          <option>Part-time</option>
-          <option>Intern</option>
-        </select>
+        <!-- Category (Multi-select) -->
+        <div>
+          <p class="frost-label">Category</p>
+          <div class="frost-checkbox-group">
+            <label v-for="c in ['Full-time','Part-time','Intern']" :key="c" class="frost-checkbox">
+              <input type="checkbox" :value="c" v-model="category" />
+              <span>{{ c }}</span>
+            </label>
+          </div>
+        </div>
 
         <!-- Location -->
-        <input v-model="address" placeholder="Address" />
-        <input v-model="city" placeholder="City" />
-        <input v-model="state" placeholder="State" />
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <input v-model="address" placeholder="Address" class="frost-input" />
+          <input v-model="city" placeholder="City" class="frost-input" />
+          <input v-model="state" placeholder="State" class="frost-input" />
+        </div>
 
         <!-- Dates -->
-        <input type="date" v-model="start_date" required />
-        <input type="date" v-model="end_date" required />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <input type="date" v-model="start_date" required class="frost-input" />
+          <input type="date" v-model="end_date" required class="frost-input" />
+        </div>
 
         <!-- Description -->
         <textarea
           v-model="description"
           placeholder="Job Description"
           rows="4"
+          class="frost-input"
         ></textarea>
 
-        <!-- Buttons -->
-        <div class="actions">
-          <button type="submit">
-            {{ job ? "Update" : "Save" }}
-          </button>
-          <button type="button" @click="$emit('close')">
-            Cancel
-          </button>
+        <!-- Sticky Buttons INSIDE Form -->
+        <div class="sticky bottom-0 bg-[rgba(20,40,80,0.9)] backdrop-blur-md pt-3">
+          <div class="flex gap-3">
+            <button type="submit" class="frost-btn-primary">
+              {{ job ? "Update" : "Save" }}
+            </button>
+
+            <button type="button" @click="$emit('close')" class="frost-btn-secondary">
+              Cancel
+            </button>
+          </div>
         </div>
 
       </form>
@@ -85,7 +102,7 @@ const emit = defineEmits(["close", "refresh"])
 
 const title = ref("")
 const status = ref([])
-const category = ref([])
+const category = ref([])   // MULTI-SELECT
 const address = ref("")
 const city = ref("")
 const state = ref("")
@@ -99,15 +116,18 @@ const fileInput = ref(null)
 onMounted(() => {
   if (props.job) {
     title.value = props.job.title
-    status.value = props.job.status
-    category.value = props.job.category
+    status.value = props.job.status || []
+    category.value = props.job.category || []
     address.value = props.job.address
     city.value = props.job.city
     state.value = props.job.state
     start_date.value = props.job.start_date
     end_date.value = props.job.end_date
     description.value = props.job.description
-    preview.value = props.job.image
+
+    if (props.job.image) {
+      preview.value = `http://127.0.0.1:8000${props.job.image}`
+    }
   }
 })
 
@@ -141,9 +161,7 @@ const submit = async () => {
   form.append("end_date", end_date.value)
   form.append("description", description.value)
 
-  if (image.value) {
-    form.append("image", image.value)
-  }
+  if (image.value) form.append("image", image.value)
 
   if (props.job) {
     await api.put(`jobs/${props.job.id}/`, form)
@@ -157,62 +175,109 @@ const submit = async () => {
 </script>
 
 <style>
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
+  .frost-modal {
+  background: #f8fbff;
+  border: 1px solid #dbeafe;
+  color: #1e3a8a;
 }
 
-.box {
-  background: white;
-  padding: 20px;
-  width: 420px;
-  max-height: 90vh;
-  overflow-y: auto;
-  border-radius: 8px;
+.frost-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2563eb;
 }
 
-.upload-box {
-  border: 2px dashed #aaa;
-  padding: 10px;
+.text-muted {
+  color: #64748b;
+}
+
+.frost-upload {
+  border: 2px dashed #93c5fd;
+  border-radius: 12px;
+  padding: 16px;
   text-align: center;
-  margin-bottom: 10px;
+  cursor: pointer;
+  background: #eff6ff;
+  transition: 0.3s;
 }
 
-.preview {
+.frost-upload:hover {
+  background: #dbeafe;
+}
+
+.frost-input {
   width: 100%;
-  margin-top: 10px;
-  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #bfdbfe;
+  color: #1e3a8a;
+  padding: 10px 14px;
+  border-radius: 10px;
+  outline: none;
 }
 
-input,
-select,
-textarea {
-  width: 100%;
-  padding: 6px;
-  margin-bottom: 8px;
+.frost-input::placeholder {
+  color: #94a3b8;
 }
 
-.actions {
+.frost-label {
+  font-weight: 600;
+  color: #1e3a8a;
+  margin-bottom: 6px;
+}
+
+.frost-checkbox-group {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
-.actions button {
+.frost-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #1e3a8a;
+  transition: 0.25s ease;
+}
+
+.frost-checkbox:hover {
+  background: #dbeafe;
+}
+
+.frost-checkbox input {
+  accent-color: #2563eb;
+}
+
+.frost-btn-primary {
   flex: 1;
-  padding: 8px;
-  border: none;
-  border-radius: 4px;
   background: #2563eb;
   color: white;
-  cursor: pointer;
+  border: none;
+  padding: 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: 0.3s;
 }
 
-.actions button:last-child {
-  background: #6b7280;
+.frost-btn-primary:hover {
+  background: #1d4ed8;
 }
+
+.frost-btn-secondary {
+  flex: 1;
+  background: #e5e7eb;
+  color: #1e3a8a;
+  border: 1px solid #cbd5f5;
+  padding: 10px;
+  border-radius: 12px;
+}
+
+.sticky {
+  background: #f8fbff;
+}
+
 </style>
