@@ -205,18 +205,44 @@ const editJob = (job) => {
 }
 
 const deleteJob = async (id) => {
-  if (!confirm("Delete this job?")) return
-  await api.delete(`jobs/${id}/`)
-  fetchJobs()
+  Swal.fire({
+    title: "Delete this job?",
+    text: "This action cannot be undone!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#2563eb",   // Blue
+    cancelButtonColor: "#94a3b8",    // Gray
+    confirmButtonText: "Yes, delete it",
+    cancelButtonText: "Cancel"
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      await api.delete(`jobs/${id}/`)
+      fetchJobs()
+
+      Swal.fire({
+        icon: "success",
+        title: "Deleted!",
+        text: "The job has been removed.",
+        timer: 2000,
+        showConfirmButton: false
+      })
+    }
+  })
 }
 
 const duplicateJob = async (id) => {
   const res = await api.post(`jobs/${id}/duplicate/`)
-  const newJob = res.data
+  fetchJobs()
 
-  const index = jobs.value.findIndex(j => j.id === id)
-  jobs.value.splice(index + 1, 0, newJob)
+  Swal.fire({
+    icon: "success",
+    title: "Job Duplicated",
+    text: "A copy of the job has been created successfully!",
+    timer: 2000,
+    showConfirmButton: false
+  })
 }
+
 
 onMounted(fetchJobs)
 </script>

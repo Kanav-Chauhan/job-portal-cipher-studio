@@ -165,8 +165,22 @@ const submit = async () => {
 
   if (props.job) {
     await api.put(`jobs/${props.job.id}/`, form)
+    Swal.fire({
+  icon: "success",
+  title: "Job Updated",
+  text: "Changes saved successfully!",
+  timer: 2000,
+  showConfirmButton: false
+})
   } else {
     await api.post("jobs/", form)
+    Swal.fire({
+  icon: "success",
+  title: "Job Created",
+  text: "The job has been saved successfully!",
+  timer: 2000,
+  showConfirmButton: false
+})
   }
 
   emit("refresh")
